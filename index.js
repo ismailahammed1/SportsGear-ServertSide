@@ -1,0 +1,85 @@
+require("dotenv").config();
+const express = require("express");
+const { ObjectId } = require("mongodb"); 
+const { MongoClient, ServerApiVersion } = require("mongodb");
+const cors = require("cors");
+const app = express();
+const port = process.env.PORT || 5000;
+
+app.use(cors());
+app.use(express.json());
+
+const db_username = process.env.DB_USER;
+const db_password = process.env.DB_PASSWORD;
+
+const uri = `mongodb+srv://${db_username}:${db_password}@cluster0.dyugevw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+});
+
+async function run() {
+  try {
+    await client.connect();
+    console.log("Connected to MongoDB successfully");
+
+    const database = client.db("SportsEquipmentDB");
+    const equipmentsCollection = database.collection("SportsEquipment");
+
+    // equepments section
+
+    app.get("/allequipments", async (req, res) => {
+      const cursor =equipmentsCollection.find();
+      const Allequipments = await cursor.toArray(); 
+      res.json(Allequipments);
+    });
+
+
+    // Get a single equipment item by ID
+    app.get("/equipments/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const objectId = new ObjectId(id);
+        const equipment = await equipmentsCollection.findOne({ _id: objectId });
+    
+        if (!equipment) {
+          return res.status(404).json({ message: "Item not found" });
+        }
+    
+        res.json(equipment);
+      } catch (error) {
+        console.error("Error fetching equipment:", error);
+        res.status(500).json({ message: "Server error" });
+      }
+    });
+    
+    
+    app.post("/equipments", async (req, res) => {
+      const equipment = req.body;
+      console.log("Adding equipment:", equipment);
+      const result = await equipmentsCollection.insertOne(equipment);
+      res.json({ message: "Equipment added successfully", result });
+    });
+
+    //user seciton
+    app.get("/", (req, res) => {
+      res.send("Hello Sports Gear");
+    });
+
+    await client.db("admin").command({ ping: 1 });
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
+  } catch (error) {
+    console.error("Database connection error:", error);
+    process.exit(1);
+  }
+}
+run().catch(console.dir);
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
