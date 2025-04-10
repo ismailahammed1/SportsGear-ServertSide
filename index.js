@@ -56,14 +56,13 @@ async function run() {
       }
     });
 
-
+//update
     app.put("/equipments/:id", async (req, res) => {
       try {
         const id = req.params.id;
         console.log("Received ID:", id); // Log the ID
         console.log("Request body:", req.body); // Log the incoming data
-    
-        // Validate the ID
+  
         if (!ObjectId.isValid(id)) {
           return res.status(400).json({ message: "Invalid equipment ID" });
         }
@@ -102,7 +101,22 @@ async function run() {
         res.status(500).json({ message: "Server error", error: error.message });
       }
     });
-
+//delete
+    app.delete("/equipments/:id", async (req, res) => {
+      try {
+        const id = req.params.id;  
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ message: "Invalid equipment ID" });
+        }
+    
+        const query = { _id: new ObjectId(id) };
+        const result = await equipmentsCollection.deleteOne(query);  
+        res.json({ message: "Equipment updated successfully", result });
+      } catch (error) {
+        console.error("Error updating equipment:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+      }
+    });
     
     app.post("/equipments", async (req, res) => {
       const equipment = req.body;
