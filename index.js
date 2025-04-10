@@ -55,7 +55,54 @@ async function run() {
         res.status(500).json({ message: "Server error" });
       }
     });
+
+
+    app.put("/equipments/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        console.log("Received ID:", id); // Log the ID
+        console.log("Request body:", req.body); // Log the incoming data
     
+        // Validate the ID
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ message: "Invalid equipment ID" });
+        }
+    
+        const filter = { _id: new ObjectId(id) };
+        const options = { upsert: true };
+        const updatedEquipment = req.body;
+    
+        const equipment = {
+          $set: {
+            image: updatedEquipment.image,
+            itemName: updatedEquipment.itemName,
+            category: updatedEquipment.category,
+            subCategory: updatedEquipment.subCategory,
+            description: updatedEquipment.description,
+            price: updatedEquipment.price,
+            rating: updatedEquipment.rating,
+            customization: updatedEquipment.customization,
+            processingTime: updatedEquipment.processingTime,
+            stockStatus: updatedEquipment.stockStatus,
+            userName: updatedEquipment.userName,
+            userEmail: updatedEquipment.userEmail,
+          },
+        };
+    
+        const result = await equipmentsCollection.updateOne(filter, equipment, options);
+        console.log("Update result:", result); // Log the result
+    
+        if (result.matchedCount === 0 && result.upsertedCount === 0) {
+          return res.status(404).json({ message: "Equipment not found and not upserted" });
+        }
+    
+        res.json({ message: "Equipment updated successfully", result });
+      } catch (error) {
+        console.error("Error updating equipment:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+      }
+    });
+
     
     app.post("/equipments", async (req, res) => {
       const equipment = req.body;
