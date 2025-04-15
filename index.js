@@ -32,10 +32,28 @@ async function run() {
 
     // equepments section
 
+
+
+
     app.get("/allequipments", async (req, res) => {
-      const cursor =equipmentsCollection.find();
-      const Allequipments = await cursor.toArray(); 
-      res.json(Allequipments);
+      const limit = parseInt(req.query.limit) || 0;
+      const cursor = equipmentsCollection.find();
+      
+      if (limit > 0) {
+        cursor.limit(limit);
+      }
+      
+      const result = await cursor.toArray();
+      res.json(result);
+    });
+    
+
+
+    app.get("/equipment", async (req, res) => {
+      const userEmail = req.query.email;
+      const query = userEmail ? { userEmail } : {};
+      const result = await equipmentsCollection.find(query).toArray();
+      res.send(result);
     });
 
 
@@ -127,16 +145,25 @@ async function run() {
     });
 
     //user seciton
-    app.post("/users", async (req, res) => {
-      const users = req.body;
-      const existingUser = await userCollection.findOne({ email: users.email });
+    app.get("/users", async (req, res) => {
+      const email = req.query.email;
+      if (!email) return res.status(400).json({ message: "Email is required" });
+      
+      const query = { email };
+      const user = await userCollection.findOne(query);
+      res.json(user ? [user] : []);
+    });
 
-  if (existingUser) {
-    return res.status(400).json({ message: "User already exists" });
-  }
-      console.log("Adding equipment:", users);
-      const result = await userCollection.insertOne(users);
-      res.json({ message: "Equipment added successfully", result });
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const existingUser = await userCollection.findOne({ email: user.email });
+      
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+      
+      const result = await userCollection.insertOne(user);
+      res.json(result);
     });
 
     await client.db("admin").command({ ping: 1 });
