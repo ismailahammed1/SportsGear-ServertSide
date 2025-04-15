@@ -28,6 +28,7 @@ async function run() {
 
     const database = client.db("SportsEquipmentDB");
     const equipmentsCollection = database.collection("SportsEquipment");
+    const userCollection = client.db("SportsEquipmentDB").collection('userDB')
 
     // equepments section
 
@@ -126,8 +127,11 @@ async function run() {
     });
 
     //user seciton
-    app.get("/", (req, res) => {
-      res.send("Hello Sports Gear");
+    app.post("/equipments", async (req, res) => {
+      const users = req.body;
+      console.log("Adding equipment:", users);
+      const result = await userCollection.insertOne(users);
+      res.json({ message: "Equipment added successfully", result });
     });
 
     await client.db("admin").command({ ping: 1 });
