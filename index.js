@@ -127,8 +127,13 @@ async function run() {
     });
 
     //user seciton
-    app.post("/equipments", async (req, res) => {
+    app.post("/users", async (req, res) => {
       const users = req.body;
+      const existingUser = await userCollection.findOne({ email: users.email });
+
+  if (existingUser) {
+    return res.status(400).json({ message: "User already exists" });
+  }
       console.log("Adding equipment:", users);
       const result = await userCollection.insertOne(users);
       res.json({ message: "Equipment added successfully", result });
