@@ -20,7 +20,7 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
-//sd
+
 async function run() {
   try {
     await client.connect();
@@ -47,6 +47,15 @@ async function run() {
       res.json(result);
     });
     
+
+
+    app.get("/equipment", async (req, res) => {
+      const userEmail = req.query.email;
+      const query = userEmail ? { userEmail } : {};
+      const result = await equipmentsCollection.find(query).toArray();
+      res.send(result);
+    });
+
 
     // Get a single equipment item by ID
     app.get("/equipments/:id", async (req, res) => {
@@ -112,24 +121,21 @@ async function run() {
       }
     });
 //delete
-app.delete("/equipments/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid equipment ID" });
-    }
-
-    const query = { _id: new ObjectId(id) };
-    const result = await equipmentsCollection.deleteOne(query);
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "Equipment not found" });
-    }
-    res.json({ message: "Equipment deleted successfully", result });
-  } catch (error) {
-    console.error("Error deleting equipment:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-});
+    app.delete("/equipments/:id", async (req, res) => {
+      try {
+        const id = req.params.id;  
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ message: "Invalid equipment ID" });
+        }
+    
+        const query = { _id: new ObjectId(id) };
+        const result = await equipmentsCollection.deleteOne(query);  
+        res.json({ message: "Equipment updated successfully", result });
+      } catch (error) {
+        console.error("Error updating equipment:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+      }
+    });
     
     app.post("/equipments", async (req, res) => {
       const equipment = req.body;
@@ -174,4 +180,3 @@ run().catch(console.dir);
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-
